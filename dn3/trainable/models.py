@@ -23,7 +23,7 @@ class DN3BaseModel(nn.Module):
     :any:`DN3BaseModel` objects, are re-interpreted as a two-stage pipeline, the two stages being *feature extraction*
     and *classification*.
     """
-    def __init__(self, samples, channels, return_features=True):
+    def __init__(self, samples, channels, return_features=False):
         super().__init__()
         self.samples = samples
         self.channels = channels
@@ -101,7 +101,7 @@ class Classifier(DN3BaseModel):
         assert isinstance(dataset, DN3ataset)
         return cls(samples=dataset.sequence_length, channels=len(dataset.channels), **modelargs)
 
-    def __init__(self, targets, samples, channels, return_features=True):
+    def __init__(self, targets, samples, channels, return_features=False):
         super(Classifier, self).__init__(samples, channels, return_features=return_features)
         self.targets = targets
         self.make_new_classification_layer()
@@ -382,7 +382,7 @@ class EEGNetStrided(StrideClassifier):
 class BENDRClassifier(Classifier):
 
     def __init__(self, targets, samples, channels,
-                 return_features=True,
+                 return_features=False,
                  encoder_h=256,
                  encoder_w=(3, 2, 2, 2, 2, 2),
                  encoder_do=0.,
