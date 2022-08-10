@@ -643,11 +643,8 @@ class StandardClassification(BaseProcess):
         return (inputs[-1] == outputs.argmax(dim=-1)).float().mean().item()
 
     def forward(self, *inputs):
-        if isinstance(self.classifier, Classifier) and self.classifier.return_features:
-            prediction, _ = self.classifier(*inputs[:-1])
-        else:
-            prediction = self.classifier(*inputs[:-1])
-        return prediction
+        outputs = self.classifier(*inputs[:-1])
+        return outputs
 
     def calculate_loss(self, inputs, outputs):
         inputs = list(inputs)
@@ -854,7 +851,8 @@ class BendingCollegeWav2Vec(BaseProcess):
             encoder = torch.nn.DataParallel(encoder)
             context_fn = torch.nn.DataParallel(context_fn)
         if encoder_grad_frac < 1:
-            encoder.register_backward_hook(lambda module, in_grad, out_grad:
+            # encoder.register_backward_hook(lambda module, in_grad, out_grad:
+            encoder.register_full_backward_hook(lambda module, in_grad, out_grad:
                                            tuple(encoder_grad_frac * ig for ig in in_grad))
         super(BendingCollegeWav2Vec, self).__init__(encoder=encoder, context_fn=context_fn,
                                                     loss_fn=torch.nn.CrossEntropyLoss(), lr=learning_rate,
@@ -981,7 +979,8 @@ class BendingCollegeClassification(BendingCollegeWav2Vec, StandardClassification
         self.predict_length = mask_span
         self._enc_downsample = encoder.downsampling_factor
         if encoder_grad_frac < 1:
-            encoder.register_backward_hook(lambda module, in_grad, out_grad:
+            # encoder.register_backward_hook(lambda module, in_grad, out_grad:
+            encoder.register_full_backward_hook(lambda module, in_grad, out_grad:
                                                        tuple(encoder_grad_frac * ig for ig in in_grad))
         self.best_metric = None
         self.mask_rate = mask_rate
